@@ -1,9 +1,11 @@
 #include "Course.h"
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
-grade Course::GetGrade(const string& s)
+grade Course::GetGrade(string&& s)
 {
+	for_each(s.begin(), s.end(), [](char& c) { c = toupper(static_cast<unsigned char>(c)); });
 	if (s == "A+")
 		return _A_plus;
 	if (s == "A")
@@ -39,7 +41,9 @@ grade Course::GetGrade(const string& s)
 	throw invalid_argument(s);
 }
 
-Course::Course(string&& id, string&& name, int credit) : name(name), id(id), credit(credit) {}
+Course::Course(string&& id, string&& name, int credit) : name(name), id(id), credit(credit)
+{
+}
 
 void Course::AddCourse(string&& id, string&& name, int credit)
 {
@@ -102,4 +106,7 @@ grade Course::GetScore(const string& id)
 	return grades[id];
 }
 
-float const GP[] = { 4.0f, 4.0f, 3.7f, 3.3f, 3.0f, 2.7f, 2.3f, 2.0f, 1.7f, 1.3f, 1.0f, 0.0f, NAN, NAN, NAN, NAN };
+const float GP[] = {4.0f, 4.0f, 3.7f, 3.3f, 3.0f, 2.7f, 2.3f, 2.0f, 1.7f, 1.3f, 1.0f, 0.0f, NAN, NAN, NAN, NAN};
+const char* const GradeName[] = {
+	"A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F", "P", "W", "I", "EX"
+};

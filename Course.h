@@ -34,13 +34,13 @@ enum grade
 class Course
 {
 private:
-	string name;	// 课名
-	string id;		// 课号
-	int credit = 0;		// 学分
+	string name; // 课名
+	string id; // 课号
+	int credit = 0; // 学分
 	map<string, grade> grades; // 学生成绩
-	static inline grade GetGrade(const string& s);
 
 public:
+	static grade GetGrade(string&& s);
 	Course() = default;
 	Course(string&& id, string&& name, int credit);
 	static void AddCourse(string&& id, string&& name, int credit);
@@ -55,5 +55,6 @@ public:
 };
 
 extern const float GP[]; // 等级制对应的绩点
+extern const char* const GradeName[]; // 等级的字符串
 
 #endif // COURSE_H

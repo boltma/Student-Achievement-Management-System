@@ -1,9 +1,13 @@
 #include "User.h"
 #include <stdexcept>
 
-User::User(string&& id, string&& name) : id(id), name(name) {}
+User::User(string&& id, string&& name) : id(id), name(name)
+{
+}
 
-Teacher::Teacher(string&& id, string&& name) : User(std::move(id), std::move(name)) {}
+Teacher::Teacher(string&& id, string&& name) : User(std::move(id), std::move(name))
+{
+}
 
 void Teacher::AddTeacher(string&& id, string&& name)
 {
@@ -13,7 +17,9 @@ void Teacher::AddTeacher(string&& id, string&& name)
 	teacher[temp] = Teacher(std::move(id), std::move(name));
 }
 
-Student::Student(string&& id, string&& name) : User(std::move(id), std::move(name)) {}
+Student::Student(string&& id, string&& name) : User(std::move(id), std::move(name))
+{
+}
 
 void Student::AddStudent(string&& id, string&& name)
 {

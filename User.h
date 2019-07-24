@@ -15,9 +15,11 @@ extern map<string, class Student> student;
  */
 class User
 {
+	//todo: Add Password if possible
+
 private:
-	string id;			// 学号/工号
-	string name;		// 姓名
+	string id; // 学号/工号
+	string name; // 姓名
 
 public:
 	User() = default;
@@ -38,7 +40,7 @@ public:
 class Student : public User
 {
 private:
-	float GPA = 0.0f;	// 绩点
+	float GPA = 0.0f; // 绩点
 	set<Course> course; // 课程
 
 public:
