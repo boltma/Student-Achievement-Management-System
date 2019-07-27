@@ -19,7 +19,8 @@ public:
 	StateMachine();
 	void SetState(State*);
 	void SetIdentity(bool);
-	bool GetIdentity();
+	bool GetIdentity() const;
+	const string& GetID() const;
 	void SetID(string&&);
 	void exec();
 };

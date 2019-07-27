@@ -1,7 +1,10 @@
 ﻿#include "State.h"
 #include "User.h"
+#include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 StateMachine* State::machine = nullptr; // 在machine的构造函数中被设为唯一的实例指针
 
@@ -14,6 +17,12 @@ MainMenu& State::MainMenu()
 ScoreMenu& State::ScoreMenu()
 {
 	static class ScoreMenu menu;
+	return menu;
+}
+
+ChangeMenu& State::ChangeMenu()
+{
+	static class ChangeMenu menu;
 	return menu;
 }
 
@@ -123,8 +132,7 @@ void State::NewTeacher(const string& id)
 		cout << "Check teacher name: " << name << endl
 			<< "1.Yes" << endl
 			<< "2.No" << endl;
-		int flag = Input(2);
-		if (flag == 1)
+		if (Input(2) == 1)
 			break;
 	}
 	Teacher::AddTeacher(std::move(temp), std::move(name));
@@ -134,6 +142,7 @@ void State::NewStudent(const string& id)
 {
 	string temp = id;
 	string name;
+	int classID;
 	while (true)
 	{
 		cout << "Please input student name in the next line:" << endl;
@@ -142,11 +151,20 @@ void State::NewStudent(const string& id)
 		cout << "Check student name: " << name << endl
 			<< "1.Yes" << endl
 			<< "2.No" << endl;
-		int flag = Input(2);
-		if (flag == 1)
+		if (Input(2) == 1)
 			break;
 	}
-	Student::AddStudent(std::move(temp), std::move(name));
+	while (true)
+	{
+		cout << "Please input credit (no more than 20):";
+		classID = Input(20); // 假设班号不超过20
+		cout << "Check class number: " << classID << endl
+			<< "1.Yes" << endl
+			<< "2.No" << endl;
+		if (Input(2) == 1)
+			break;
+	}
+	Student::AddStudent(std::move(temp), std::move(name), classID);
 }
 
 void State::NewCourse(const string& id)
@@ -162,8 +180,7 @@ void State::NewCourse(const string& id)
 		cout << "Check course name: " << name << endl
 			<< "1.Yes" << endl
 			<< "2.No" << endl;
-		int flag = Input(2);
-		if (flag == 1)
+		if (Input(2) == 1)
 			break;
 	}
 	while (true)
@@ -173,8 +190,7 @@ void State::NewCourse(const string& id)
 		cout << "Check credit: " << credit << endl
 			<< "1.Yes" << endl
 			<< "2.No" << endl;
-		int flag = Input(2);
-		if (flag == 1)
+		if (Input(2) == 1)
 			break;
 	}
 	Course::AddCourse(std::move(temp), std::move(name), credit);
@@ -187,8 +203,13 @@ void MainMenu::enter()
 		<< "******************************************************" << endl
 		<< endl
 		<< "Please input your identity." << endl
-		<< "1.Teacher" << endl << "2.Student" << endl;
-	int flag = Input(2);
+		<< "1.Teacher" << endl << "2.Student" << endl << "3.Quit" << endl;
+	int flag = Input(3);
+	if (flag == 3)
+	{
+		quit = true;
+		return;
+	}
 	machine->SetIdentity(flag == 1);
 	string id = InputID("Please Input ID:", flag);
 	machine->SetID(std::move(id));
@@ -250,7 +271,7 @@ void ScoreMenu::enter()
 		cout << "2.Show GPA" << endl
 			<< "3.Show Rank" << endl
 			<< "4.Return to Main Menu" << endl;
-		flag = Input(4);
+		flag = Input(5);
 	}
 }
 
@@ -298,6 +319,7 @@ void ScoreMenu::exec()
 					try
 					{
 						course[ID].SetScore(studentID, g, false);
+						student[studentID].AddCourse(course[ID]);
 					}
 					catch (invalid_argument& e)
 					{
@@ -354,6 +376,11 @@ void ScoreMenu::exec()
 					cout << "Please input ID of course you want to add:";
 					string ID;
 					cin >> ID;
+					if (course.count(ID))
+					{
+						cout << "Course ID already exists. Please enter again." << endl;
+						continue;
+					}
 					cout << "Check course ID: " << ID << endl
 						<< "1.Yes" << endl
 						<< "2.No" << endl;
@@ -371,15 +398,164 @@ void ScoreMenu::exec()
 		case 5:
 			{
 				// 更改课程信息
+				flag = -2;
 				break;
 			}
 		case 6:
 			{
 				// 返回主页面
+				flag = -1;
 				break;
 			}
 		default:
 			break;
+		}
+	}
+	else
+	{
+		switch (flag)
+		{
+		case 1:
+			{
+				// 查询成绩
+				cout << "1.Inquire all grades" << endl
+					<< "2.Inquire grade by course id" << endl;
+				if (Input(2) == 1)
+				{
+					for (const auto& c : student[machine->GetID()].GetCourse())
+					{
+						cout << setw(10) << c.GetID() << ' ' << setw(15) << c.GetName() << ' ' << c.GetScore(
+							machine->GetID()) << endl;
+					}
+				}
+				else
+				{
+					while (true)
+					{
+						cout << "Please input ID of course you want to inquire:";
+						string ID;
+						cin >> ID;
+						try
+						{
+							cout << "Your grade in this course is: " << GradeName[course[ID].GetScore(machine->GetID())
+							];
+						}
+						catch (invalid_argument& e)
+						{
+							cout << e.what() << endl
+								<< "Please enter again." << endl;
+						}
+						cout << "Continue input?" << endl
+							<< "1.Yes" << endl
+							<< "2.No" << endl;
+						if (Input(2) == 2)
+							break;
+					}
+					break;
+				}
+				break;
+			}
+		case 2:
+			{
+				// 查询GPA
+				cout << "Total GPA: " << student[machine->GetID()].GetGPA() << endl;
+				break;
+			}
+		case 3:
+			{
+				// 显示排名
+				const auto& stu = student[machine->GetID()];
+				const auto& c = class_list[stu.GetClass()];
+				float gpa = stu.GetGPA();
+				vector<float> all_gpa, class_gpa;
+				all_gpa.reserve(student.size());
+				class_gpa.reserve(c.size());
+				for (const auto& s : student)
+				{
+					all_gpa.push_back(s.second.GetGPA());
+				}
+				for(const auto& s: c)
+				{
+					class_gpa.push_back(s->GetGPA());
+				}
+				sort(all_gpa.begin(), all_gpa.end(), greater<>());
+				sort(class_gpa.begin(), class_gpa.end(), greater<>());
+				int total_rank = find(all_gpa.begin(), all_gpa.end(), gpa) - all_gpa.begin() + 1;
+				int class_rank = find(class_gpa.begin(), class_gpa.end(), gpa) - class_gpa.begin() + 1;
+				cout << "Total rank: " << total_rank << '/' << student.size() << endl;
+				cout << "Class rank: " << class_rank << '/' << c.size() << endl;
+				break;
+			}
+		case 4:
+			{
+				// 返回主菜单
+				flag = -1;
+				break;
+			}
+		default:
+			break;
+		}
+	}
+}
+
+State* ScoreMenu::exit()
+{
+	if (flag == -1)
+		return &MainMenu();
+	if (flag == -2)
+		return &ChangeMenu();
+	return &State::ScoreMenu();
+}
+
+void ChangeMenu::exec()
+{
+	if (machine->GetIdentity())
+	{
+		while (true)
+		{
+			string ID = InputID("Please input course ID you want to change info of:", 3);
+			cout << "Please select from the following options." << endl
+				<< "1.Change course name" << endl
+				<< "2.Change course credit" << endl;
+			int flag = Input(3);
+			switch (flag)
+			{
+			case 1:
+				{
+					string name;
+					while (true)
+					{
+						cout << "Please input course name in the next line:" << endl;
+						cin.ignore(numeric_limits<streamsize>::max(), '\n');
+						getline(cin, name);
+						cout << "Check course name: " << name << endl
+							<< "1.Yes" << endl
+							<< "2.No" << endl;
+						if (Input(2) == 1)
+							break;
+					}
+					course[ID].SetName(name);
+					break;
+				}
+			case 2:
+				{
+					int credit;
+					while (true)
+					{
+						cout << "Please input credit (no more than 20):";
+						credit = Input(20); // 假设学分不超过20
+						cout << "Check credit: " << credit << endl
+							<< "1.Yes" << endl
+							<< "2.No" << endl;
+						if (Input(2) == 1)
+							break;
+					}
+					course[ID].SetCredit(credit);
+					break;
+				}
+			default:
+				break;
+			}
 		}
 	}
 }

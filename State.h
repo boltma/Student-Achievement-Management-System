@@ -23,6 +23,7 @@ protected:
 public:
 	static class MainMenu& MainMenu();
 	static class ScoreMenu& ScoreMenu();
+	static class ChangeMenu& ChangeMenu();
 	virtual ~State() = default;
 	virtual void enter() = 0; // 进入状态
 	virtual void exec() = 0; // 执行状态
@@ -33,14 +34,13 @@ public:
 
 class MainMenu : public State
 {
+private:
+	bool quit = false;
+
 public:
 	void enter() override;
-
-	void exec() override
-	{
-	}
-
-	State* exit() override { return reinterpret_cast<State*>(&ScoreMenu()); }
+	void exec() override {}
+	State* exit() override { return reinterpret_cast<State*>(quit ? nullptr : &ScoreMenu()); }
 };
 
 class ScoreMenu : public State
@@ -52,7 +52,15 @@ public:
 	grade InputGrade();
 	void enter() override;
 	void exec() override;
-	State* exit() override { return nullptr; }
+	State* exit() override; 
+};
+
+class ChangeMenu : public State
+{
+public:
+	void enter() override {}
+	void exec() override;
+	State* exit() override { return reinterpret_cast<State*>(&ScoreMenu()); }
 };
 
 #endif // STATE_H

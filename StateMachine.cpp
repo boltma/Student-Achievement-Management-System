@@ -25,9 +25,15 @@ void StateMachine::SetIdentity(bool flag)
 	is_teacher = flag;
 }
 
-bool StateMachine::GetIdentity()
+// ÀÏÊ¦Îªtrue
+bool StateMachine::GetIdentity() const
 {
 	return is_teacher;
+}
+
+const string& StateMachine::GetID() const
+{
+	return id;
 }
 
 void StateMachine::SetID(string&& id)

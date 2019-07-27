@@ -5,7 +5,7 @@
 
 grade Course::GetGrade(string&& s)
 {
-	for_each(s.begin(), s.end(), [](char& c) { c = toupper(static_cast<unsigned char>(c)); });
+	for_each(s.begin(), s.end(), [](char& c) { c = static_cast<char>(toupper(static_cast<int>(c))); });
 	if (s == "A+")
 		return _A_plus;
 	if (s == "A")
@@ -41,8 +41,11 @@ grade Course::GetGrade(string&& s)
 	throw invalid_argument(s);
 }
 
-Course::Course(string&& id, string&& name, int credit) : name(name), id(id), credit(credit)
+Course::Course(string&& id, string&& name, int credit) : name(name), id(id), credit(credit) {}
+
+bool Course::operator<(const Course& c) const
 {
+	return id < c.id;
 }
 
 void Course::AddCourse(string&& id, string&& name, int credit)
@@ -99,11 +102,11 @@ void Course::SetScore(const string& id, grade g, bool flag)
 	grades[id] = g;
 }
 
-grade Course::GetScore(const string& id)
+grade Course::GetScore(const string& id) const
 {
 	if (!grades.count(id))
 		throw invalid_argument("ID not found!");
-	return grades[id];
+	return grades.find(id)->second;
 }
 
 const float GP[] = {4.0f, 4.0f, 3.7f, 3.3f, 3.0f, 2.7f, 2.3f, 2.0f, 1.7f, 1.3f, 1.0f, 0.0f, NAN, NAN, NAN, NAN};

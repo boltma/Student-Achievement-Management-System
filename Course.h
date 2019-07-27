@@ -40,9 +40,10 @@ private:
 	map<string, grade> grades; // 学生成绩
 
 public:
-	static grade GetGrade(string&& s);
+	static grade GetGrade(string&& s); // 字符串转等级
 	Course() = default;
 	Course(string&& id, string&& name, int credit);
+	bool operator< (const Course&) const;
 	static void AddCourse(string&& id, string&& name, int credit);
 	const string& GetName() const;
 	const string& GetID() const;
@@ -51,7 +52,7 @@ public:
 	void SetID(const string&);
 	void SetCredit(int);
 	void SetScore(const string&, grade, bool);
-	grade GetScore(const string&);
+	grade GetScore(const string&) const;
 };
 
 extern const float GP[]; // 等级制对应的绩点
