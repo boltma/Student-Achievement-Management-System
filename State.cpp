@@ -479,23 +479,79 @@ void ScoreMenu::exec()
 		case 7:
 			{
 				// 列出学生
-				// todo: 按班级
-				for (const auto& s : student)
+				int num;
+				while (true)
 				{
-					const auto& d = s.second;
-					cout << setiosflags(ios_base::left) << setw(10) << d.GetID() << ' ' << setw(15) << d.GetName()
-						<< ' ' << fixed << showpoint << setprecision(2) << d.GetGPA() << endl;
+					cout << "Input -1 to terminate." << endl
+						<< "Input 0 to list all students or input class number:";
+					cin >> num;
+					if (num == 0 || num == -1)
+						break;
+					if (!class_list.count(num))
+					{
+						cout << "Not invalid class number, please enter again." << endl;
+						OutputClassList();
+						continue;
+					}
+					break;
+				}
+				if (num == -1)
+					break;
+				if (num == 0)
+				{
+					for (const auto& s : student)
+					{
+						const auto& d = s.second;
+						cout << setiosflags(ios_base::left) << setw(10) << d.GetID() << ' ' << setw(15) << d.GetName()
+							<< ' ' << fixed << showpoint << setprecision(2) << d.GetGPA() << endl;
+					}
+				}
+				else
+				{
+					for (const auto& s : class_list[num])
+					{
+						cout << setiosflags(ios_base::left) << setw(10) << s->GetID() << ' ' << setw(15) << s->GetName()
+							<< ' ' << fixed << showpoint << setprecision(2) << s->GetGPA() << endl;
+					}
 				}
 				break;
 			}
 		case 8:
 			{
 				// 学生排名
-				// todo: 按班级
-				vector<pair<string, Student>> v(student.begin(), student.end());
+				int num;
+				while (true)
+				{
+					cout << "Input -1 to terminate." << endl
+						<< "Input 0 to list all students or input class number:";
+					cin >> num;
+					if (num == 0 || num == -1)
+						break;
+					if (!class_list.count(num))
+					{
+						cout << "Not invalid class number, please enter again." << endl;
+						OutputClassList();
+						continue;
+					}
+					break;
+				}
+				if (num == -1)
+					break;
+				vector<pair<string, Student>> v;
+				if (num == 0)
+				{
+					v.insert(v.begin(), student.begin(), student.end());
+				}
+				else
+				{
+					for(auto& s : class_list[num])
+					{
+						v.emplace_back(s->GetID(), *s);
+					}
+				}
 				sort(v.begin(), v.end(), CmpGPA);
 				float curGPA = 5;
-				int cnt = 1;
+				unsigned cnt = 1;
 				for (unsigned i = 1; i <= v.size(); ++i)
 				{
 					const auto& s = v[i - 1];
@@ -504,7 +560,7 @@ void ScoreMenu::exec()
 						cnt = i;
 						curGPA = s.second.GetGPA();
 					}
-					cout << cnt << ' ' << setiosflags(ios_base::left) << setw(10) << s.first << ' ' << setw(15)
+					cout << cnt << "  " << setiosflags(ios_base::left) << setw(10) << s.first << ' ' << setw(15)
 						<< s.second.GetName() << ' ' << fixed << showpoint << setprecision(2) << curGPA << endl;
 				}
 				break;

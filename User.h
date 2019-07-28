@@ -70,4 +70,6 @@ istream& operator>> (istream&, Student&);
 ostream& operator<< (ostream&, const Teacher&) noexcept;
 ostream& operator<< (ostream&, const Student&) noexcept;
 
+void OutputClassList();
+
 #endif // USER_H

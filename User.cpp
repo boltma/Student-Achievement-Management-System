@@ -112,3 +112,16 @@ ostream& operator<<(ostream& out, const Student& s) noexcept
 	out << '#' << endl;
 	return out;
 }
+
+void OutputClassList()
+{
+	cout << "Currently available class number: ";
+	if (class_list.empty())
+		cout << "null" << endl;
+	else
+	{
+		for (const auto& c : class_list)
+			cout << c.first << ' ';
+		cout << endl;
+	}
+}
