@@ -17,6 +17,7 @@ private:
 
 public:
 	StateMachine();
+	~StateMachine();
 	void SetState(State*);
 	void SetIdentity(bool);
 	bool GetIdentity() const;

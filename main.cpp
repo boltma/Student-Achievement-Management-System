@@ -5,7 +5,7 @@
 map<string, Course> course;
 map<string, Teacher> teacher;
 map<string, Student> student;
-map<int, vector<Student*>> class_list; // 班号对应的学生列表
+map<int, vector<const Student*>> class_list; // 班号对应的学生列表
 
 int main(int argc, char* argv[])
 {

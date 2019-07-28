@@ -60,11 +60,14 @@ string State::InputID(string&& text, int flag)
 {
 	while (true)
 	{
-		cout << text;
+		cout << "Input # to terminate input." << endl
+			<< text;
 		string id;
 		try
 		{
 			cin >> id;
+			if (id == "#")
+				break;
 			for (auto c : id)
 			{
 				if (!isalnum(c))
@@ -76,20 +79,24 @@ string State::InputID(string&& text, int flag)
 			case 1:
 				if (teacher.count(id))
 					break;
+				throw 1;
 			case 2:
 				if (student.count(id))
 					break;
+				throw 2;
 			case 3:
 				if (course.count(id))
 					break;
+				throw 3;
 			default:
-				throw flag;
+				break;
 			}
 			return id;
 		}
 		catch (invalid_argument& e)
 		{
 			cout << e.what() << endl;
+			cout << "Please enter again." << endl;
 		}
 		catch (int f)
 		{
@@ -114,7 +121,7 @@ string State::InputID(string&& text, int flag)
 			default:
 				break;
 			}
-			break;
+			return id;
 		}
 	}
 	return "";
@@ -156,7 +163,7 @@ void State::NewStudent(const string& id)
 	}
 	while (true)
 	{
-		cout << "Please input credit (no more than 20):";
+		cout << "Please input class number (no more than 20):";
 		classID = Input(20); // 假设班号不超过20
 		cout << "Check class number: " << classID << endl
 			<< "1.Yes" << endl
@@ -198,21 +205,29 @@ void State::NewCourse(const string& id)
 
 void MainMenu::enter()
 {
-	cout << "******************************************************" << endl
-		<< "*  Welcome to Student Achievement Management System  *" << endl
-		<< "******************************************************" << endl
-		<< endl
-		<< "Please input your identity." << endl
-		<< "1.Teacher" << endl << "2.Student" << endl << "3.Quit" << endl;
-	int flag = Input(3);
-	if (flag == 3)
+	while (true)
 	{
-		quit = true;
-		return;
+		cout << "******************************************************" << endl
+			<< "*  Welcome to Student Achievement Management System  *" << endl
+			<< "******************************************************" << endl
+			<< endl
+			<< "Warning: Please do not hard exit the program or all data might be lost!" << endl
+			<< endl
+			<< "Please input your identity." << endl
+			<< "1.Teacher" << endl << "2.Student" << endl << "3.Quit" << endl;
+		int flag = Input(3);
+		if (flag == 3)
+		{
+			quit = true;
+			return;
+		}
+		machine->SetIdentity(flag == 1);
+		string id = InputID("Please Input ID:", flag);
+		if (id.empty())
+			continue;
+		machine->SetID(std::move(id));
+		break;
 	}
-	machine->SetIdentity(flag == 1);
-	string id = InputID("Please Input ID:", flag);
-	machine->SetID(std::move(id));
 }
 
 grade ScoreMenu::InputGrade()
@@ -263,14 +278,19 @@ void ScoreMenu::enter()
 			<< "3.Change Grades" << endl
 			<< "4.Add Course" << endl
 			<< "5.Change Course Info" << endl
-			<< "6.Return to Main Menu" << endl;
-		flag = Input(6);
+			<< "6.List all courses" << endl
+			<< "7.List all students" << endl
+			<< "8.Get student rank" << endl
+			<< "9.Return to Main Menu" << endl;
+		//todo
+		flag = Input(9);
 	}
 	else
 	{
 		cout << "2.Show GPA" << endl
 			<< "3.Show Rank" << endl
-			<< "4.Return to Main Menu" << endl;
+			<< "4.List all courses" << endl
+			<< "5.Return to Main Menu" << endl;
 		flag = Input(5);
 	}
 }
@@ -285,13 +305,17 @@ void ScoreMenu::exec()
 			{
 				// 查询成绩
 				// todo: 全部成绩
-				string ID = InputID("Please input ID of the course you want to inquire:", 3);
+				string id = InputID("Please input ID of the course you want to inquire:", 3);
+				if (id.empty())
+					break;
 				while (true)
 				{
 					string studentID = InputID("Please input ID of student:", 2);
+					if (studentID.empty())
+						break;
 					try
 					{
-						grade g = course[ID].GetScore(studentID);
+						grade g = course[id].GetScore(studentID);
 						cout << GradeName[g] << endl;
 					}
 					catch (invalid_argument& e)
@@ -310,23 +334,34 @@ void ScoreMenu::exec()
 		case 2:
 			{
 				// 录入成绩
-				// todo: change course
-				string ID = InputID("Please input ID of the course you want to record:", 3);
 				while (true)
 				{
-					string studentID = InputID("Please input ID of student:", 2);
-					grade g = InputGrade();
-					try
+					string id = InputID("Please input ID of the course you want to record:", 3);
+					if (id.empty())
+						break;
+					while (true)
 					{
-						course[ID].SetScore(studentID, g, false);
-						student[studentID].AddCourse(course[ID]);
+						string studentID = InputID("Please input ID of student:", 2);
+						if (studentID.empty())
+							break;
+						grade g = InputGrade();
+						try
+						{
+							course[id].SetScore(studentID, g, false);
+							student[studentID].AddCourse(course[id]);
+						}
+						catch (invalid_argument& e)
+						{
+							cout << e.what() << endl
+								<< "Please enter again." << endl;
+						}
+						cout << "Continue input in this course?" << endl
+							<< "1.Yes" << endl
+							<< "2.No" << endl;
+						if (Input(2) == 2)
+							break;
 					}
-					catch (invalid_argument& e)
-					{
-						cout << e.what() << endl
-							<< "Please enter again." << endl;
-					}
-					cout << "Continue input?" << endl
+					cout << "Continue input in another course?" << endl
 						<< "1.Yes" << endl
 						<< "2.No" << endl;
 					if (Input(2) == 2)
@@ -337,30 +372,41 @@ void ScoreMenu::exec()
 		case 3:
 			{
 				// 更改成绩
-				// todo: change course
-				string ID = InputID("Please input ID of the course you want to record:", 3);
 				while (true)
 				{
-					string studentID = InputID("Please input ID of student:", 2);
-					try
+					string id = InputID("Please input ID of the course you want to record:", 3);
+					if (id.empty())
+						break;
+					while (true)
 					{
-						grade temp = course[ID].GetScore(studentID);
-						cout << "The original grade of the student is " << GradeName[temp] << endl
-							<< "Are you sure to change the grade?" << endl
+						string studentID = InputID("Please input ID of student:", 2);
+						if (studentID.empty())
+							break;
+						try
+						{
+							grade temp = course[id].GetScore(studentID);
+							cout << "The original grade of the student is " << GradeName[temp] << endl
+								<< "Are you sure to change the grade?" << endl
+								<< "1.Yes" << endl
+								<< "2.No" << endl;
+						}
+						catch (invalid_argument& e)
+						{
+							cout << e.what() << endl;
+							continue;
+						}
+						if (Input(2) == 1)
+						{
+							grade g = InputGrade();
+							course[id].SetScore(studentID, g, true);
+						}
+						cout << "Continue input in this course?" << endl
 							<< "1.Yes" << endl
 							<< "2.No" << endl;
+						if (Input(2) == 2)
+							break;
 					}
-					catch (invalid_argument& e)
-					{
-						cout << e.what() << endl;
-						continue;
-					}
-					if (Input(2) == 1)
-					{
-						grade g = InputGrade();
-						course[ID].SetScore(studentID, g, true);
-					}
-					cout << "Continue input?" << endl
+					cout << "Continue input in another course?" << endl
 						<< "1.Yes" << endl
 						<< "2.No" << endl;
 					if (Input(2) == 2)
@@ -373,20 +419,38 @@ void ScoreMenu::exec()
 				// 添加课程
 				while (true)
 				{
-					cout << "Please input ID of course you want to add:";
-					string ID;
-					cin >> ID;
-					if (course.count(ID))
+					cout << "Input # to terminate input." << endl
+						<< "Please input ID of course you want to add:";
+					string id;
+					cin >> id;
+					if (id == "#")
+						break;
+					try
+					{
+						for (auto c : id)
+						{
+							if (!isalnum(c))
+								throw invalid_argument(
+									"Invalid character in ID! ID should only contain alphabets and numbers.");
+							// ID中不出现非数字，字母
+						}
+					}
+					catch (invalid_argument& e)
+					{
+						cout << e.what() << endl;
+						continue;
+					}
+					if (course.count(id))
 					{
 						cout << "Course ID already exists. Please enter again." << endl;
 						continue;
 					}
-					cout << "Check course ID: " << ID << endl
+					cout << "Check course ID: " << id << endl
 						<< "1.Yes" << endl
 						<< "2.No" << endl;
-					if (Input(2) == 1)
+					if (Input(2) == 2)
 						continue;
-					NewCourse(ID);
+					NewCourse(id);
 					cout << "Continue input?" << endl
 						<< "1.Yes" << endl
 						<< "2.No" << endl;
@@ -402,6 +466,50 @@ void ScoreMenu::exec()
 				break;
 			}
 		case 6:
+			{
+				// 列出课程
+				for (const auto& c : course)
+				{
+					const auto& d = c.second;
+					cout << setiosflags(ios_base::left) << setw(10) << d.GetID() << ' ' << setw(15) << d.GetName()
+						<< ' ' << d.GetCredit() << endl;
+				}
+				break;
+			}
+		case 7:
+			{
+				// 列出学生
+				// todo: 按班级
+				for (const auto& s : student)
+				{
+					const auto& d = s.second;
+					cout << setiosflags(ios_base::left) << setw(10) << d.GetID() << ' ' << setw(15) << d.GetName()
+						<< ' ' << fixed << showpoint << setprecision(2) << d.GetGPA() << endl;
+				}
+				break;
+			}
+		case 8:
+			{
+				// 学生排名
+				// todo: 按班级
+				vector<pair<string, Student>> v(student.begin(), student.end());
+				sort(v.begin(), v.end(), CmpGPA);
+				float curGPA = 5;
+				int cnt = 1;
+				for (unsigned i = 1; i <= v.size(); ++i)
+				{
+					const auto& s = v[i - 1];
+					if (s.second.GetGPA() < curGPA)
+					{
+						cnt = i;
+						curGPA = s.second.GetGPA();
+					}
+					cout << cnt << ' ' << setiosflags(ios_base::left) << setw(10) << s.first << ' ' << setw(15)
+						<< s.second.GetName() << ' ' << fixed << showpoint << setprecision(2) << curGPA << endl;
+				}
+				break;
+			}
+		case 9:
 			{
 				// 返回主页面
 				flag = -1;
@@ -424,21 +532,24 @@ void ScoreMenu::exec()
 				{
 					for (const auto& c : student[machine->GetID()].GetCourse())
 					{
-						cout << setw(10) << c.GetID() << ' ' << setw(15) << c.GetName() << ' ' << c.GetScore(
-							machine->GetID()) << endl;
+						cout << setiosflags(ios_base::left) << setw(10) << c->GetID() << ' ' << setw(15) << c->GetName()
+							<< ' ' << c->GetCredit() << ' ' << c->GetScore(machine->GetID()) << endl;
 					}
 				}
 				else
 				{
 					while (true)
 					{
-						cout << "Please input ID of course you want to inquire:";
-						string ID;
-						cin >> ID;
+						cout << "Input # to terminate input." << endl
+							<< "Please input ID of course you want to inquire:";
+						string id;
+						cin >> id;
+						if (id == "#")
+							break;
 						try
 						{
-							cout << "Your grade in this course is: " << GradeName[course[ID].GetScore(machine->GetID())
-							];
+							cout << "Your grade in this course is: " << GradeName[course[id].GetScore(machine->GetID())]
+								<< endl;
 						}
 						catch (invalid_argument& e)
 						{
@@ -458,7 +569,8 @@ void ScoreMenu::exec()
 		case 2:
 			{
 				// 查询GPA
-				cout << "Total GPA: " << student[machine->GetID()].GetGPA() << endl;
+				cout << "Total GPA: " << fixed << showpoint << setprecision(2) << student[machine->GetID()].GetGPA() <<
+					endl;
 				break;
 			}
 		case 3:
@@ -474,7 +586,7 @@ void ScoreMenu::exec()
 				{
 					all_gpa.push_back(s.second.GetGPA());
 				}
-				for(const auto& s: c)
+				for (const auto& s : c)
 				{
 					class_gpa.push_back(s->GetGPA());
 				}
@@ -487,6 +599,32 @@ void ScoreMenu::exec()
 				break;
 			}
 		case 4:
+			{
+				// 列出课程
+				cout << "Please select from the following options." << endl
+					<< "1.List courses engaged in" << endl
+					<< "2.List all courses" << endl;
+				const auto& stu = student[machine->GetID()];
+				if (Input(2) == 1)
+				{
+					for (const auto& c : stu.GetCourse())
+					{
+						cout << setiosflags(ios_base::left) << setw(10) << c->GetID() << ' ' << setw(15) << c->GetName()
+							<< ' ' << c->GetCredit() << endl;
+					}
+				}
+				else
+				{
+					for (const auto& c : course)
+					{
+						const auto& d = c.second;
+						cout << setiosflags(ios_base::left) << setw(10) << d.GetID() << ' ' << setw(15) << d.GetName()
+							<< ' ' << d.GetCredit() << endl;
+					}
+				}
+				break;
+			}
+		case 5:
 			{
 				// 返回主菜单
 				flag = -1;
@@ -513,7 +651,7 @@ void ChangeMenu::exec()
 	{
 		while (true)
 		{
-			string ID = InputID("Please input course ID you want to change info of:", 3);
+			string id = InputID("Please input course ID you want to change info of:", 3);
 			cout << "Please select from the following options." << endl
 				<< "1.Change course name" << endl
 				<< "2.Change course credit" << endl;
@@ -534,7 +672,7 @@ void ChangeMenu::exec()
 						if (Input(2) == 1)
 							break;
 					}
-					course[ID].SetName(name);
+					course[id].SetName(name);
 					break;
 				}
 			case 2:
@@ -550,7 +688,7 @@ void ChangeMenu::exec()
 						if (Input(2) == 1)
 							break;
 					}
-					course[ID].SetCredit(credit);
+					course[id].SetCredit(credit);
 					break;
 				}
 			default:

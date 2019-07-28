@@ -109,6 +109,35 @@ grade Course::GetScore(const string& id) const
 	return grades.find(id)->second;
 }
 
+istream& operator>>(istream& in, Course& course)
+{
+	in >> course.id >> course.credit;
+	in.ignore(numeric_limits<streamsize>::max(), '\n');
+	getline(in, course.name);
+	while(true)
+	{
+		string id, g;
+		in >> id;
+		if (id == "#")
+			break;
+		in >> g;
+		course.grades[id] = Course::GetGrade(std::move(g));
+	}
+	return in;
+}
+
+ostream& operator<<(ostream& out, const Course& course) noexcept
+{
+	out << course.id << ' ' << course.credit << endl
+		<< course.name << endl;
+	for (const auto& s : course.grades)
+	{
+		out << s.first << ' ' << GradeName[s.second] << endl;
+	}
+	out << '#' << endl;
+	return out;
+}
+
 const float GP[] = {4.0f, 4.0f, 3.7f, 3.3f, 3.0f, 2.7f, 2.3f, 2.0f, 1.7f, 1.3f, 1.0f, 0.0f, NAN, NAN, NAN, NAN};
 const char* const GradeName[] = {
 	"A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F", "P", "W", "I", "EX"

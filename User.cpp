@@ -3,6 +3,16 @@
 
 User::User(string&& id, string&& name) : id(id), name(name) {}
 
+const string& User::GetID() const
+{
+	return id;
+}
+
+const string& User::GetName() const
+{
+	return name;
+}
+
 Teacher::Teacher(string&& id, string&& name) : User(std::move(id), std::move(name)) {}
 
 void Teacher::AddTeacher(string&& id, string&& name)
@@ -31,16 +41,16 @@ void Student::AddStudent(string&& id, string&& name, int classID)
 	if (student.count(temp))
 		throw invalid_argument(temp);
 	student[temp] = Student(std::move(id), std::move(name), classID);
-	if(!class_list.count(classID))
+	if (!class_list.count(classID))
 	{
-		class_list[classID] = vector<Student*>{};
+		class_list[classID] = vector<const Student*>{};
 	}
 	class_list[classID].push_back(&student[temp]);
 }
 
 void Student::AddCourse(const Course& c)
 {
-	course.insert(c);
+	course_list.push_back(&c);
 	grade g = c.GetScore(id);
 	if (!isnan(GP[g]))
 	{
@@ -50,7 +60,55 @@ void Student::AddCourse(const Course& c)
 	}
 }
 
-const set<Course>& Student::GetCourse() const
+const vector<const Course*>& Student::GetCourse() const
 {
-	return course;
+	return course_list;
+}
+
+bool CmpGPA(const pair<string, Student>& a, const pair<string, Student>& b)
+{
+	return a.second.GetGPA() < b.second.GetGPA();
+}
+
+istream& operator>>(istream& in, Teacher& t)
+{
+	in >> t.id;
+	in.ignore(numeric_limits<streamsize>::max(), '\n');
+	getline(in, t.name);
+	return in;
+}
+
+istream& operator>>(istream& in, Student& s)
+{
+	in >> s.id >> s.classID >> s.credit >> s.GPA;
+	in.ignore(numeric_limits<streamsize>::max(), '\n');
+	getline(in, s.name);
+	while (true)
+	{
+		string id;
+		in >> id;
+		if (id == "#")
+			break;
+		s.course_list.push_back(&course[id]);
+	}
+	return in;
+}
+
+ostream& operator<<(ostream& out, const Teacher& t) noexcept
+{
+	out << t.id << endl
+		<< t.name << endl;
+	return out;
+}
+
+ostream& operator<<(ostream& out, const Student& s) noexcept
+{
+	out << s.id << ' ' << s.classID << ' ' << s.credit << ' ' << s.GPA << endl
+		<< s.name << endl;
+	for (const auto& c : s.course_list)
+	{
+		out << c->GetID() << endl;
+	}
+	out << '#' << endl;
+	return out;
 }

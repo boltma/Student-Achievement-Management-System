@@ -1,6 +1,7 @@
 #ifndef COURSE_H
 #define COURSE_H
 
+#include <iostream>
 #include <string>
 #include <map>
 using namespace std;
@@ -44,6 +45,8 @@ public:
 	Course() = default;
 	Course(string&& id, string&& name, int credit);
 	bool operator< (const Course&) const;
+	friend istream& operator>> (istream&, Course&);
+	friend ostream& operator<< (ostream&, const Course&) noexcept;
 	static void AddCourse(string&& id, string&& name, int credit);
 	const string& GetName() const;
 	const string& GetID() const;
@@ -54,6 +57,9 @@ public:
 	void SetScore(const string&, grade, bool);
 	grade GetScore(const string&) const;
 };
+
+istream& operator>> (istream&, Course&);
+ostream& operator<< (ostream&, const Course&) noexcept;
 
 extern const float GP[]; // 等级制对应的绩点
 extern const char* const GradeName[]; // 等级的字符串
