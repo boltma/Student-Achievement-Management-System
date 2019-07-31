@@ -1,4 +1,5 @@
 ﻿#include "State.h"
+#include "StateMachine.h"
 #include "User.h"
 #include <algorithm>
 #include <iomanip>
@@ -7,24 +8,9 @@
 #include <vector>
 
 StateMachine* State::machine = nullptr; // 在machine的构造函数中被设为唯一的实例指针
-
-MainMenu& State::MainMenu()
-{
-	static class MainMenu menu;
-	return menu;
-}
-
-ScoreMenu& State::ScoreMenu()
-{
-	static class ScoreMenu menu;
-	return menu;
-}
-
-ChangeMenu& State::ChangeMenu()
-{
-	static class ChangeMenu menu;
-	return menu;
-}
+MainMenu State::main_menu = MainMenu();
+ScoreMenu State::score_menu = ScoreMenu();
+ChangeMenu State::change_menu = ChangeMenu();
 
 int State::Input(int n) // n表示可输入的最大数
 {
@@ -214,11 +200,12 @@ void MainMenu::enter()
 			<< "Warning: Please do not hard exit the program or all data might be lost!" << endl
 			<< endl
 			<< "Please input your identity." << endl
-			<< "1.Teacher" << endl << "2.Student" << endl << "3.Quit" << endl;
-		int flag = Input(3);
-		if (flag == 3)
+			<< "1.Teacher" << endl << "2.Student" << endl
+			<< "3.Add new identity" << endl
+			<< "4.Quit" << endl;
+		flag = Input(4);
+		if (flag == 4 || flag == 3)
 		{
-			quit = true;
 			return;
 		}
 		machine->SetIdentity(flag == 1);
@@ -230,7 +217,67 @@ void MainMenu::enter()
 	}
 }
 
-grade ScoreMenu::InputGrade()
+void MainMenu::exec()
+{
+	if (flag == 3)
+	{
+		while (true)
+		{
+			cout << "1.Add Teacher" << endl
+				<< "2.Add Student" << endl
+				<< "3.Quit" << endl;
+			int a = Input(3);
+			if (a == 3)
+				break;
+			cout << "Input # to terminate input." << endl
+				<< "Please input ID of person you want to add:";
+			string id;
+			cin >> id;
+			if (id == "#")
+				continue;
+			try
+			{
+				for (auto c : id)
+				{
+					if (!isalnum(c))
+						throw invalid_argument(
+							"Invalid character in ID! ID should only contain alphabets and numbers.");
+					// ID中不出现非数字，字母
+				}
+			}
+			catch (invalid_argument& e)
+			{
+				cout << e.what() << endl;
+				continue;
+			}
+			if (a == 1 && teacher.count(id) || a == 2 && student.count(id))
+			{
+				cout << "Person ID already exists. Please enter again." << endl;
+				continue;
+			}
+			cout << "Check ID: " << id << endl
+				<< "1.Yes" << endl
+				<< "2.No" << endl;
+			if (Input(2) == 2)
+				continue;
+			if (a == 1)
+				NewTeacher(id);
+			else
+				NewStudent(id);
+		}
+	}
+}
+
+State* MainMenu::exit()
+{
+	if (flag == 4)
+		return nullptr;
+	if (flag == 3)
+		return &main_menu;
+	return &score_menu;
+}
+
+grade ScoreMenu::InputGrade() const
 {
 	while (true)
 	{
@@ -282,7 +329,6 @@ void ScoreMenu::enter()
 			<< "7.List all students" << endl
 			<< "8.Get student rank" << endl
 			<< "9.Return to Main Menu" << endl;
-		//todo
 		flag = Input(9);
 	}
 	else
@@ -398,7 +444,9 @@ void ScoreMenu::exec()
 						if (Input(2) == 1)
 						{
 							grade g = InputGrade();
+							grade g_old = course[id].GetScore(studentID);
 							course[id].SetScore(studentID, g, true);
+							student[studentID].ChangeGrade(course[id], g_old);
 						}
 						cout << "Continue input in this course?" << endl
 							<< "1.Yes" << endl
@@ -544,7 +592,7 @@ void ScoreMenu::exec()
 				}
 				else
 				{
-					for(auto& s : class_list[num])
+					for (auto& s : class_list[num])
 					{
 						v.emplace_back(s->GetID(), *s);
 					}
@@ -695,10 +743,10 @@ void ScoreMenu::exec()
 State* ScoreMenu::exit()
 {
 	if (flag == -1)
-		return &MainMenu();
+		return &main_menu;
 	if (flag == -2)
-		return &ChangeMenu();
-	return &State::ScoreMenu();
+		return &change_menu;
+	return &score_menu;
 }
 
 void ChangeMenu::exec()

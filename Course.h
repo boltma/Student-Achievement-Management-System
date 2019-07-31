@@ -6,7 +6,7 @@
 #include <map>
 using namespace std;
 
-extern map<string, class Course> course;
+extern map<string, class Course>& course;
 
 // 等级，加下划线防止重名
 enum grade

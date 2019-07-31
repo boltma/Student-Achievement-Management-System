@@ -2,17 +2,29 @@
 #include "User.h"
 #include <fstream>
 
-void StateMachine::update()
+void Info::SetIdentity(bool flag)
 {
-	state->enter();
-	state->exec();
-	this->SetState(state->exit());
+	is_teacher = flag;
 }
 
-StateMachine::StateMachine()
+// 老师为true
+bool Info::GetIdentity() const
 {
-	State::machine = this;
-	state = &State::MainMenu();
+	return is_teacher;
+}
+
+const string& Info::GetID() const
+{
+	return id;
+}
+
+void Info::SetID(string&& id)
+{
+	this->id = id;
+}
+
+void Data::ReadData()
+{
 	ifstream in("data.txt");
 	if (!in)
 		return;
@@ -57,7 +69,7 @@ StateMachine::StateMachine()
 	}
 }
 
-StateMachine::~StateMachine()
+void Data::WriteData()
 {
 	ofstream out;
 	try
@@ -95,34 +107,46 @@ StateMachine::~StateMachine()
 	}
 }
 
+void StateMachine::update()
+{
+	state->enter();
+	state->exec();
+	this->SetState(state->exit());
+}
+
+StateMachine::StateMachine()
+{
+	State::machine = this;
+	state = &State::main_menu;
+}
+
 void StateMachine::SetState(State* s)
 {
 	state = s;
-}
-
-void StateMachine::SetIdentity(bool flag)
-{
-	is_teacher = flag;
-}
-
-// 老师为true
-bool StateMachine::GetIdentity() const
-{
-	return is_teacher;
-}
-
-const string& StateMachine::GetID() const
-{
-	return id;
-}
-
-void StateMachine::SetID(string&& id)
-{
-	this->id = id;
 }
 
 void StateMachine::exec()
 {
 	while (state != nullptr)
 		update();
+}
+
+map<string, Course>& StateMachine::GetCourse()
+{
+	return course;
+}
+
+map<string, Teacher>& StateMachine::GetTeacher()
+{
+	return teacher;
+}
+
+map<string, Student>& StateMachine::GetStudent()
+{
+	return student;
+}
+
+map<int, vector<const Student*>>& StateMachine::GetClassList()
+{
+	return class_list;
 }

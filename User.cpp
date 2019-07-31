@@ -60,6 +60,29 @@ void Student::AddCourse(const Course& c)
 	}
 }
 
+
+/**
+ * \brief 修改课程成绩
+ * \param c 已修改的课程
+ * \param g 原本成绩
+ */
+void Student::ChangeGrade(const Course& c, grade g)
+{
+	float total = GPA * static_cast<float>(credit);
+	if(!isnan(GP[g]))
+	{
+		total -= GP[g] * static_cast<float>(c.GetCredit());
+		credit -= c.GetCredit();
+	}
+	g = c.GetScore(id);
+	if(!isnan(GP[g]))
+	{
+		total += GP[g] * static_cast<float>(c.GetCredit());
+		credit += c.GetCredit();
+	}
+	GPA = total / static_cast<float>(credit);
+}
+
 const vector<const Course*>& Student::GetCourse() const
 {
 	return course_list;
@@ -67,7 +90,7 @@ const vector<const Course*>& Student::GetCourse() const
 
 bool CmpGPA(const pair<string, Student>& a, const pair<string, Student>& b)
 {
-	return a.second.GetGPA() < b.second.GetGPA();
+	return a.second.GetGPA() > b.second.GetGPA();
 }
 
 istream& operator>>(istream& in, Teacher& t)
@@ -80,7 +103,7 @@ istream& operator>>(istream& in, Teacher& t)
 
 istream& operator>>(istream& in, Student& s)
 {
-	in >> s.id >> s.classID >> s.credit >> s.GPA;
+	in >> s.id >> s.classID;
 	in.ignore(numeric_limits<streamsize>::max(), '\n');
 	getline(in, s.name);
 	while (true)
@@ -89,7 +112,7 @@ istream& operator>>(istream& in, Student& s)
 		in >> id;
 		if (id == "#")
 			break;
-		s.course_list.push_back(&course[id]);
+		s.AddCourse(course[id]);
 	}
 	return in;
 }
@@ -103,7 +126,7 @@ ostream& operator<<(ostream& out, const Teacher& t) noexcept
 
 ostream& operator<<(ostream& out, const Student& s) noexcept
 {
-	out << s.id << ' ' << s.classID << ' ' << s.credit << ' ' << s.GPA << endl
+	out << s.id << ' ' << s.classID << ' ' << endl
 		<< s.name << endl;
 	for (const auto& c : s.course_list)
 	{

@@ -1,14 +1,15 @@
-#include "Course.h"
 #include "StateMachine.h"
 #include "User.h"
 
-map<string, Course> course;
-map<string, Teacher> teacher;
-map<string, Student> student;
-map<int, vector<const Student*>> class_list; // 班号对应的学生列表
+StateMachine machine;
+map<string, Course>& course = machine.GetCourse();
+map<string, Teacher>& teacher = machine.GetTeacher();
+map<string, Student>& student = machine.GetStudent();
+map<int, vector<const Student*>>& class_list = machine.GetClassList();
 
 int main(int argc, char* argv[])
 {
-	StateMachine machine;
+	machine.ReadData();
 	machine.exec();
+	machine.WriteData();
 }

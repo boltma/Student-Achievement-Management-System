@@ -8,9 +8,9 @@
 #include <vector>
 using namespace std;
 
-extern map<string, class Teacher> teacher;
-extern map<string, class Student> student;
-extern map<int, vector<const Student*>> class_list;
+extern map<string, class Teacher>& teacher;
+extern map<string, class Student>& student;
+extern map<int, vector<const Student*>>& class_list;
 
 /**
  * \brief 成绩管理系统用户信息
@@ -59,7 +59,8 @@ public:
 	float GetGPA() const;
 	int GetClass() const;
 	static void AddStudent(string&& id, string&& name, int classID);
-	void AddCourse(const Course& c);
+	void AddCourse(const Course&);
+	void ChangeGrade(const Course&, grade);
 	const vector<const Course*>& GetCourse() const;
 };
 
